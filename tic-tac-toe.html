@@ -60,7 +60,10 @@
         ];
 
         grid.addEventListener('click', function(event) {
+            // ユーザーがクリックした対象がセルであることを確認
             const cell = event.target;
+            if (!cell.classList.contains('cell')) return; 
+            
             const index = cell.getAttribute('data-index');
 
             if (gameState[index] !== '' || !gameActive) {

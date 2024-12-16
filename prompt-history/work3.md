@@ -1,3 +1,56 @@
+3×3マスと4×4マスの○×ゲームを切り替えられるように、以下のコードを修正します。HTMLファイルにボタンを追加して、マスのサイズを選択できるようにし、それに基づいてゲームの状態を更新するようにします。
+
+### 1. HTML ファイル (index.html)
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>○×ゲーム</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div>
+        <button onclick="setGridSize(3)">3x3 マス</button>
+        <button onclick="setGridSize(4)">4x4 マス</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="message" id="message"></div>
+    <button onclick="resetGame()">リセット</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+### 2. CSS ファイル (styles.css)
+
+```css
+.grid {
+    display: grid;
+    grid-gap: 5px;
+}
+.cell {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    border: 1px solid #000;
+    cursor: pointer;
+}
+.message {
+    margin-top: 20px;
+    font-size: 1.5em;
+}
+```
+
+### 3. JavaScript ファイル (script.js)
+
+```javascript
 let currentPlayer = '○';
 let gameState = [];
 let gameActive = true;
@@ -96,3 +149,13 @@ function resetGame() {
 
 // デフォルトは3x3マスで開始
 setGridSize(3);
+```
+
+### 説明
+
+- **gridSize**: 現在のマスのサイズ（3または4）を保持する変数です。
+- **setGridSize**: ボタンがクリックされたときに呼び出され、選択されたサイズでゲームをリセットします。
+- **createGrid**: 指定されたサイズに応じてグリッドを生成します。
+- **winningConditions**: 各サイズの勝利条件を格納しています。
+
+この構成により、ユーザーは「3x3 マス」と「4x4 マス」を切り替えて遊ぶことができます。他に質問があればお知らせください！

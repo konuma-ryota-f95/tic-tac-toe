@@ -3,8 +3,8 @@ let gameState = []; // ゲーム状態
 let gameActive = true; // ゲームがアクティブかどうか
 let gridSize = 3;
 let specialCellsEnabled = false; // 特殊マスの有無
-let trapCellIndex; // トラップマスのインデックス
-let bonusCellIndex; // ボーナスマスのインデックス
+let trapCells = [];
+let bonusCells = [];
 let trapOwner; // トラップマスを置いたプレイヤー
 const message = document.getElementById('message');
 const turnIndicator = document.getElementById('turnIndicator');
@@ -52,40 +52,30 @@ function setGridSize(size) {
     gridSize = size;
     resetGame();
     createGrid();
+
+    const maxCells = gridSize * gridSize;
+    document.getElementById('bonusCount').max = maxCells;
+    document.getElementById('trapCount').max = maxCells;
 }
 
 function toggleSpecialCells() {
-    specialCellsEnabled = !specialCellsEnabled;
+    specialCellsEnabled = document.getElementById('specialCellsToggle').checked;
     resetGame();
 }
 
-// グリッドを生成する関数
-function createGrid() {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = ''; // 初期化
-    grid.style.gridTemplateColumns = `repeat(${gridSize}, 100px)`;
-    gameState = Array(gridSize * gridSize).fill('');
+function updateSpecialCellsUI() {
+    const disabled = !specialCellsEnabled;
+    
+    // 入力フィールドとボタンの活性化/非活性化
+    document.getElementById('bonusCount').disabled = disabled;
+    document.getElementById('trapCount').disabled = disabled;
+    document.getElementById('visibleSpecials').disabled = disabled;
+    document.getElementById('addSpecialCellsButton').disabled = disabled;
+}
 
-    if (specialCellsEnabled) {
-        generateSpecialCells(); // 特殊マスを生成
-    }
-
-    for (let i = 0; i < gridSize * gridSize; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.setAttribute('data-index', i);
-
-        // 特殊マスのスタイルを適用
-        if (i === bonusCellIndex) {
-            cell.classList.add('bonus');
-        }
-        if (i === trapCellIndex) {
-            cell.classList.add('trap');
-        }
-
-        cell.addEventListener('click', handleCellClick);
-        grid.appendChild(cell);
-    }
+function addSpecialCells() {
+    specialCellsEnabled = true;
+    resetGame();
 }
 
 // プレイヤーごとのスキップフラグを初期化
@@ -118,20 +108,22 @@ function handleCellClick(event) {
     }
 
     // トラップマスのチェック
-    if (index == trapCellIndex) {
-        message.textContent += `${currentPlayer} がトラップマスに置きました！次の${currentPlayer} のターンがスキップされます。`;
+    if (trapCells.includes(parseInt(index))) {
+        message.textContent += `${currentPlayer}がトラップマスに置きました！次の${currentPlayer} のターンがスキップされます。`;
         skipFlags[currentPlayer] = 1; // 現在のプレイヤーのスキップフラグを立てる
+        cell.classList.remove('hidden');
     }
     
     // ボーナスマスのチェック
-    if (index == bonusCellIndex) {
-        message.textContent += `\n${currentPlayer} がボーナスマスに置きました！もう一度プレイできます。`;
+    if (bonusCells.includes(parseInt(index))) {
+        message.textContent += `\n${currentPlayer}がボーナスマスに置きました！もう一度プレイできます。`;
         skipFlags[nextPlayer] = 1; // 次のプレイヤーのスキップフラグを立てる
+        cell.classList.remove('hidden');
     }
 
     // 次のプレイヤーのスキップフラグを確認
     if (skipFlags[nextPlayer] === 1) {
-        message.textContent += `\n${nextPlayer} のターンがスキップされました。`;
+        message.textContent += `\n${nextPlayer}のターンがスキップされました。`;
         skipFlags[nextPlayer] = 0; // スキップフラグをリセット
         // 現在のプレイヤーのターンを維持
     } else {
@@ -147,9 +139,13 @@ function checkResult() {
 
     for (const condition of winningConditions[gridSize]) {
         const [a, b, c, d, e] = condition;
-        if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c] &&
+        if (
+            gameState[a] && 
+            gameState[a] === gameState[b] && 
+            gameState[a] === gameState[c] &&
             (d === undefined || gameState[a] === gameState[d]) &&
-            (e === undefined || gameState[a] === gameState[e])) {
+            (e === undefined || gameState[a] === gameState[e])
+        ) {
             roundWon = true;
             break;
         }
@@ -174,22 +170,91 @@ function checkResult() {
 function resetGame() {
     currentPlayer = '○';
     gameActive = true;
-    bonusCellIndex = null; // 初期化
-    trapCellIndex = null;  // 初期化
+    bonusCells = []; // 初期化
+    trapCells = [];  // 初期化
     message.textContent = '';
     turnIndicator.textContent = `現在のターン: ${currentPlayer}`;
     createGrid();
+
+    gameState = Array(gridSize * gridSize).fill('');
+
+    // 特殊マスのUIを初期化
+    updateSpecialCellsUI();
+
+    // 最大値を更新
+    const maxCells = gridSize * gridSize;
+    document.getElementById('bonusCount').max = maxCells;
+    document.getElementById('trapCount').max = maxCells;
 }
 
 // 特殊マスのインデックスを生成する関数
 function generateSpecialCells() {
     const totalCells = gridSize * gridSize;
+    const bonusCount = parseInt(document.getElementById('bonusCount').value);
+    const trapCount = parseInt(document.getElementById('trapCount').value);
 
-    bonusCellIndex = Math.floor(Math.random() * totalCells);
-    trapCellIndex = Math.floor(Math.random() * totalCells);
+    // ボーナスマスとトラップマスの数がセルの数を超える場合のチェック
+    if (bonusCount + trapCount > totalCells) {
+        message.textContent = 'ボーナスマスとトラップマスの合計はセルの数を超えてはいけません！';
+        return; // 処理を中断
+    }
 
-    while (trapCellIndex === bonusCellIndex) {
-        trapCellIndex = Math.floor(Math.random() * totalCells); // ボーナスマスと重ならないようにする
+    let attempts = 0; // 試行回数をカウント
+    const maxAttempts = 100; // 最大試行回数を設定
+
+    // ボーナスマスの生成
+    bonusCells = [];
+    while (bonusCells.length < bonusCount && attempts < maxAttempts) {
+        let randomIndex = Math.floor(Math.random() * totalCells);
+        if (!bonusCells.includes(randomIndex) && !trapCells.includes(randomIndex)) {
+            bonusCells.push(randomIndex);
+        }
+        attempts++;
+    }
+
+    // トラップマスの生成
+    attempts = 0;// 再度試行回数を初期化
+    trapCells = [];
+    while (trapCells.length < trapCount && attempts < maxAttempts) {
+        let randomIndex = Math.floor(Math.random() * totalCells);
+        if (!trapCells.includes(randomIndex) && !bonusCells.includes(randomIndex)) {
+            trapCells.push(randomIndex);
+        }
+        attempts++;
+    }
+}
+
+// グリッドを生成する関数
+function createGrid() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = ''; // 初期化
+    grid.style.gridTemplateColumns = `repeat(${gridSize}, 100px)`;
+
+    if (specialCellsEnabled) {
+        generateSpecialCells(); // 特殊マスを生成
+    }
+
+    for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('data-index', i);
+
+        // 特殊マスのスタイルを適用
+        if (bonusCells.includes(i)) {
+            cell.classList.add('bonus');
+            if (document.getElementById('visibleSpecials').value === 'false') {
+                cell.classList.add('hidden');
+            }
+        }
+        if (trapCells.includes(i)) {
+            cell.classList.add('trap');
+            if (document.getElementById('visibleSpecials').value === 'false') {
+                cell.classList.add('hidden');
+            }
+        }
+
+        cell.addEventListener('click', handleCellClick);
+        grid.appendChild(cell);
     }
 }
 

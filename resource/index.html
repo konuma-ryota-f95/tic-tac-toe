@@ -3,21 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ティックタックトー</title>
+    <title>Tic Tac Toe</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>ティックタックトー</h1>
-    <div>
-        <button onclick="setGridSize(3)">3x3 マス</button>
-        <button onclick="setGridSize(4)">4x4 マス</button>
-        <button onclick="setGridSize(5)">5x5 マス</button>
-        <button onclick="toggleSpecialCells()">特殊マスの導入</button>
+    <h1>Tic Tac Toe</h1>
+    
+    <!-- オプション設定エリア -->
+    <div style="text-align: center;">
+        <button onclick="setGridSize(3)">3x3</button>
+        <button onclick="setGridSize(4)">4x4</button>
+        <button onclick="setGridSize(5)">5x5</button>
         <button onclick="resetGame()">リセット</button>
     </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+        <label for="specialCellsToggle">特殊マスの導入:</label>
+        <input type="checkbox" id="specialCellsToggle" onchange="toggleSpecialCells()" />
+        <label for="bonusCount">ボーナスマスの数:</label>
+        <input type="number" id="bonusCount" value="1" min="0" style="width: 50px;">
+        <label for="trapCount">トラップマスの数:</label>
+        <input type="number" id="trapCount" value="1" min="0" style="width: 50px;"> 
+        <label for="visibleSpecials">特殊マスは:</label>
+        <select id="visibleSpecials">
+            <option value="true">見える</option>
+            <option value="false">見えない</option>
+        </select>
+        <button id="addSpecialCellsButton" onclick="addSpecialCells()">特殊マスを追加</button>
+    </div>
+    <!-- グリッドエリア -->
     <div id="grid"></div>
-    <div id="message"></div>
+    
     <div id="turnIndicator">現在のターン: ○</div>
+    <div id="message"></div>
+    
     <script src="script.js"></script>
 </body>
 </html>

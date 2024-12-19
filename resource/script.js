@@ -1,9 +1,13 @@
-let currentPlayer = '○';
-let gameState = [];
-let gameActive = true;
+let currentPlayer = '○'; // 現在のプレイヤー
+let gameState = []; // ゲーム状態
+let gameActive = true; // ゲームがアクティブかどうか
 let gridSize = 3;
-let specialCells = []; // 特殊マスの配列
-let skipNextTurn = false;
+let specialCellsEnabled = false; // 特殊マスの有無
+let trapCellIndex; // トラップマスのインデックス
+let bonusCellIndex; // ボーナスマスのインデックス
+let trapOwner; // トラップマスを置いたプレイヤー
+const message = document.getElementById('message');
+const turnIndicator = document.getElementById('turnIndicator');
 
 const winningConditions = {
     3: [
@@ -50,12 +54,21 @@ function setGridSize(size) {
     createGrid();
 }
 
+function toggleSpecialCells() {
+    specialCellsEnabled = !specialCellsEnabled;
+    resetGame();
+}
+
+// グリッドを生成する関数
 function createGrid() {
     const grid = document.getElementById('grid');
     grid.innerHTML = ''; // 初期化
     grid.style.gridTemplateColumns = `repeat(${gridSize}, 100px)`;
     gameState = Array(gridSize * gridSize).fill('');
-    specialCells = generateSpecialCells(); // 特殊マスを生成
+
+    if (specialCellsEnabled) {
+        generateSpecialCells(); // 特殊マスを生成
+    }
 
     for (let i = 0; i < gridSize * gridSize; i++) {
         const cell = document.createElement('div');
@@ -63,10 +76,10 @@ function createGrid() {
         cell.setAttribute('data-index', i);
 
         // 特殊マスのスタイルを適用
-        if (specialCells.bonus.includes(i)) {
+        if (i === bonusCellIndex) {
             cell.classList.add('bonus');
         }
-        if (specialCells.trap.includes(i)) {
+        if (i === trapCellIndex) {
             cell.classList.add('trap');
         }
 
@@ -75,37 +88,60 @@ function createGrid() {
     }
 }
 
+// プレイヤーごとのスキップフラグを初期化
+let skipFlags = {
+    '○': 0,
+    '×': 0
+};
+
+// セルをクリックしたときの処理
 function handleCellClick(event) {
     const cell = event.target;
     const index = cell.getAttribute('data-index');
+    let nextPlayer = currentPlayer === '○' ? '×' : '○';
 
+    // セルがすでに埋まっているか、ゲームが終了している場合は何もしない
     if (gameState[index] !== '' || !gameActive) {
         return;
     }
 
+    // メッセージをリセット
+    message.textContent = '';
+
+    // プレイヤーの入力処理
     gameState[index] = currentPlayer;
     cell.textContent = currentPlayer;
 
-    // ボーナスマスまたはトラップマスのロジック
-    if (specialCells.bonus.includes(parseInt(index))) {
-        message.textContent = 'ボーナスマス！追加ターンです。';
-    } else if (specialCells.trap.includes(parseInt(index))) {
-        message.textContent = 'トラップマス！次のターンがスキップされます。';
-        skipNextTurn = true;
-    } else {
-        skipNextTurn = false; // 通常のターンの場合
+    checkResult(); // 勝者の確認
+    if (!gameActive) {
+        return; // ゲームが終了しているので、これ以降の処理を行わない
     }
 
-    checkResult();
-
-    if (!skipNextTurn) {
-        currentPlayer = currentPlayer === '○' ? '×' : '○';
-        document.getElementById('turnIndicator').textContent = `現在のターン: ${currentPlayer}`;
-    } else {
-        skipNextTurn = false; // 次のターンがスキップされたのでリセット
+    // トラップマスのチェック
+    if (index == trapCellIndex) {
+        message.textContent += `${currentPlayer} がトラップマスに置きました！次の${currentPlayer} のターンがスキップされます。`;
+        skipFlags[currentPlayer] = 1; // 現在のプレイヤーのスキップフラグを立てる
     }
+    
+    // ボーナスマスのチェック
+    if (index == bonusCellIndex) {
+        message.textContent += `\n${currentPlayer} がボーナスマスに置きました！もう一度プレイできます。`;
+        skipFlags[nextPlayer] = 1; // 次のプレイヤーのスキップフラグを立てる
+    }
+
+    // 次のプレイヤーのスキップフラグを確認
+    if (skipFlags[nextPlayer] === 1) {
+        message.textContent += `\n${nextPlayer} のターンがスキップされました。`;
+        skipFlags[nextPlayer] = 0; // スキップフラグをリセット
+        // 現在のプレイヤーのターンを維持
+    } else {
+        // 次のプレイヤーに切り替え
+        currentPlayer = nextPlayer;
+    }
+    turnIndicator.textContent = `現在のターン: ${currentPlayer}`;
 }
 
+// 勝利条件をチェックする関数
 function checkResult() {
     let roundWon = false;
 
@@ -121,39 +157,40 @@ function checkResult() {
 
     if (roundWon) {
         message.textContent = `プレイヤー ${currentPlayer} の勝ちです！`;
+        turnIndicator.textContent = '';
         gameActive = false;
         return;
     }
 
     if (!gameState.includes('')) {
         message.textContent = '引き分けです！';
+        turnIndicator.textContent = '';
         gameActive = false;
         return;
     }
 }
 
+// ゲームをリセットする関数
 function resetGame() {
     currentPlayer = '○';
     gameActive = true;
-    skipNextTurn = false;
+    bonusCellIndex = null; // 初期化
+    trapCellIndex = null;  // 初期化
     message.textContent = '';
-    document.getElementById('turnIndicator').textContent = `現在のターン: ${currentPlayer}`;
+    turnIndicator.textContent = `現在のターン: ${currentPlayer}`;
     createGrid();
 }
 
+// 特殊マスのインデックスを生成する関数
 function generateSpecialCells() {
     const totalCells = gridSize * gridSize;
-    const bonusIndex = Math.floor(Math.random() * totalCells);
-    const trapIndex = Math.floor(Math.random() * totalCells);
 
-    while (trapIndex === bonusIndex) {
-        trapIndex = Math.floor(Math.random() * totalCells); // ボーナスマスと重ならないようにする
+    bonusCellIndex = Math.floor(Math.random() * totalCells);
+    trapCellIndex = Math.floor(Math.random() * totalCells);
+
+    while (trapCellIndex === bonusCellIndex) {
+        trapCellIndex = Math.floor(Math.random() * totalCells); // ボーナスマスと重ならないようにする
     }
-
-    return {
-        bonus: [bonusIndex],
-        trap: [trapIndex]
-    };
 }
 
 // デフォルトは3x3マスで開始

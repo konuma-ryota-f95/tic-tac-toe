@@ -6,8 +6,6 @@ let specialCellsEnabled = false; // 特殊マスの有無
 let trapCells = [];
 let bonusCells = [];
 let trapOwner = ''; // トラップマスを置いたプレイヤー
-let message = '';
-let turnIndicator = '';
 
 const winningConditions = {
     3: [
@@ -48,12 +46,12 @@ const winningConditions = {
     ]
 };
 
-export function setGridSize(size) {
+function setGridSize(size) {
     gridSize = size;
     resetGame();
 }
 
-export function getGridSize() {
+function getGridSize() {
     return gridSize;
 }
 
@@ -92,7 +90,7 @@ let skipFlags = {
 };
 
 // セルをクリックしたときの処理
-export function handleCellClick(event) {
+function handleCellClick(event) {
     const cell = event.target;
     const index = cell.getAttribute('data-index');
     let nextPlayer = currentPlayer === '○' ? '×' : '○';
@@ -144,7 +142,7 @@ export function handleCellClick(event) {
 }
 
 // 勝利条件をチェックする関数
-export function checkResult() {
+function checkResult() {
     let roundWon = false;
 
     for (const condition of winningConditions[gridSize]) {
@@ -177,7 +175,7 @@ export function checkResult() {
 }
 
 // ゲームをリセットする関数
-export function resetGame() {
+function resetGame() {
     currentPlayer = '○';
     gameActive = true;
     bonusCells = []; // 初期化
@@ -213,7 +211,7 @@ export function resetGame() {
 }
 
 // 特殊マスのインデックスを生成する関数
-export function generateSpecialCells() {
+function generateSpecialCells() {
     const totalCells = gridSize * gridSize;
     const bonusCount = parseInt(document.getElementById('bonusCount').value);
     const trapCount = parseInt(document.getElementById('trapCount').value);

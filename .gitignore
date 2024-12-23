@@ -1,0 +1,26 @@
+# node_modules ディレクトリを無視
+node_modules/
+
+# ログファイルを無視
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 環境変数ファイルを無視
+.env
+
+# OSやエディタによる一時ファイルを無視
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# ビルド生成物を無視
+dist/
+build/
+
+# Jest キャッシュを無視
+jest-cache/
+jest-output/
+
+# その他プロジェクト固有の無視設定

@@ -6,8 +6,8 @@ let specialCellsEnabled = false; // 特殊マスの有無
 let trapCells = [];
 let bonusCells = [];
 let trapOwner; // トラップマスを置いたプレイヤー
-const message = document.getElementById('message');
-const turnIndicator = document.getElementById('turnIndicator');
+let message;
+let turnIndicator;
 
 const winningConditions = {
     3: [
@@ -168,12 +168,18 @@ function checkResult() {
 
 // ゲームをリセットする関数
 function resetGame() {
+    message = document.getElementById('message');
+    turnIndicator = document.getElementById('turnIndicator');
     currentPlayer = '○';
     gameActive = true;
     bonusCells = []; // 初期化
     trapCells = [];  // 初期化
-    message.textContent = '';
-    turnIndicator.textContent = `現在のターン: ${currentPlayer}`;
+    if (message) {
+        message.textContent = '';
+    };
+    if (turnIndicator) {
+        turnIndicator.textContent = `現在のターン: ${currentPlayer}`;
+    };
     createGrid();
 
     gameState = Array(gridSize * gridSize).fill('');
@@ -227,8 +233,10 @@ function generateSpecialCells() {
 // グリッドを生成する関数
 function createGrid() {
     const grid = document.getElementById('grid');
-    grid.innerHTML = ''; // 初期化
-    grid.style.gridTemplateColumns = `repeat(${gridSize}, 100px)`;
+    if (grid){
+        grid.innerHTML = ''; // 初期化
+        grid.style.gridTemplateColumns = `repeat(${gridSize}, 100px)`;
+    }
 
     if (specialCellsEnabled) {
         generateSpecialCells(); // 特殊マスを生成
@@ -254,7 +262,9 @@ function createGrid() {
         }
 
         cell.addEventListener('click', handleCellClick);
-        grid.appendChild(cell);
+        if (grid) {
+            grid.appendChild(cell);
+        }
     }
 }
 

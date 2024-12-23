@@ -51,10 +51,6 @@ function setGridSize(size) {
     resetGame();
 }
 
-function getGridSize() {
-    return gridSize;
-}
-
 function toggleSpecialCells() {
     specialCellsEnabled = document.getElementById('specialCellsToggle').checked;
     resetGame();
@@ -178,6 +174,9 @@ function checkResult() {
 function resetGame() {
     currentPlayer = '○';
     gameActive = true;
+
+    gameState = Array(gridSize * gridSize).fill('');
+
     bonusCells = []; // 初期化
     trapCells = [];  // 初期化
     message = document.getElementById('message');
@@ -191,8 +190,6 @@ function resetGame() {
     }
 
     createGrid();
-
-    gameState = Array(gridSize * gridSize).fill('');
     
     // 特殊マスのUIを初期化
     updateSpecialCellsUI();
